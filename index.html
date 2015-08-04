@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="straTWOs Coding Rally">
+    <meta name="author" content="Lenticular Clouds">
+    <link rel="shortcut icon" href="assets/img/logo.png">
+
+    <title>LENTICULAR CLOUD COMPILER</title>
+
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+
+    <link href="assets/css/main.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/font-awesome.min.css">
+
+    <script src="assets/js/jquery.min.js"></script>
+
+    <link href='assets/font/Oswald' rel='stylesheet' type='text/css'>
+    <link href='assets/font/Garamond' rel='stylesheet' type='text/css'>
+
+    <script src="assets/js/ckeditor.js"></script>
+    <script src="assets/js/sample.js"></script>
+
+    <!--[if lt IE 9]>
+      <script src="assets/js/html5shiv.js"></script>
+      <script src="assets/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body data-spy="scroll" data-offset="0" data-target="#theMenu">
+
+    <nav class="menu" id="theMenu">
+        <div class="menu-wrap">
+            <h1 class="logo"><a href="index.html#home"><img src="assets/img/lcc-logo-w.png"></a></h1>
+            <i class="icon-remove menu-close"></i>
+            <a class="smoothScroll icon-file" onclick="return compile();"> Compile</a>
+            <a class="smoothScroll icon-refresh" onclick="return clearOutput();"> Clear output log</a>
+            <a class="smoothScroll icon-play"  onclick="return run();"> Run</a>
+        </div>
+
+        <div id="menuToggle"><i class="icon-reorder"></i></div>
+    </nav>
+
+    <section id="home" name="home"></section>
+    <div id="headerwrap">
+        <div class="container">
+            <br>
+            <div class="row">
+                <div id="editor" style="font-family: 'Courier New';">
+                    #include &lt;iostream&gt;<br><br>
+                    int main() {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;std::cout &lt;&lt; "Hello world" &lt;&lt; std::endl;<br>
+                    }<br>
+                </div>
+                <div class="col-lg-7 col-lg-offset-3" >
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <textarea id="output" class="col-lg-12" style="margin-top: 10px; height: 80px" readonly></textarea>
+    </div>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+
+    <script src="assets/js/classie.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/smoothscroll.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        initSample();
+    </script>
+    <script type="text/javascript">
+        function compile() {
+            var data = CKEDITOR.instances.editor.getData();
+            CKEDITOR.instances.editor.setReadOnly(true);
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: {
+                    htmlText : data
+                },
+                url: "ajax/compile.php",
+                success: function(data) {
+                    console.log("received ajax");
+                    printData(data, 'compile');
+                }
+             });
+
+            return false;
+        }
+
+        // For todays date;
+        Date.prototype.today = function () {
+            return ((this.getDate() < 10)?"0":"") + this.getDate() +"/"+(((this.getMonth()+1) < 10)?"0":"") + (this.getMonth()+1) +"/"+ this.getFullYear();
+        }
+
+        // For the time now
+        Date.prototype.timeNow = function () {
+             return ((this.getHours() < 10)?"0":"") + this.getHours() +":"+ ((this.getMinutes() < 10)?"0":"") + this.getMinutes() +":"+ ((this.getSeconds() < 10)?"0":"") + this.getSeconds();
+        }
+
+        function printData(data, from) {
+            console.log(data)
+            CKEDITOR.instances.editor.setReadOnly(false);
+            var datetime = new Date().today() + " @ " + new Date().timeNow();
+            var selectionText = document.getElementById("output").value;
+            if(data == '' && from == 'compile') {
+                document.getElementById("output").value = datetime + ': SUCCESS!\n-------------------------------\n' + selectionText;
+            }
+            else if (data != '' && from == 'compile') {
+                document.getElementById("output").value = datetime + ': ' + data + '\n-------------------------------\n' + selectionText;
+            }
+
+            if(from == 'run') {
+                clearOutput();
+                document.getElementById("output").value = datetime + ': ' + data;
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById("output").value = '';
+        }
+
+        function run() {
+            console.log('run');
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: { },
+                url: "ajax/run.php",
+                success: function(data) {
+                    console.log("received ajax");
+                    printData(data, 'run');
+                }
+             });
+
+            return false;
+        }
+    </script>
+</body>
+</html>
